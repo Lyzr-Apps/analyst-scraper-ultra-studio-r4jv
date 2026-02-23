@@ -36,7 +36,10 @@ import {
   FiZap,
   FiTarget,
   FiExternalLink,
+  FiPhone,
+  FiMapPin,
 } from 'react-icons/fi'
+import { SiLinkedin } from 'react-icons/si'
 
 // ── Agent IDs ──────────────────────────────────────────────
 const URL_SUGGESTION_AGENT_ID = '699c3550dd37e749f18292dd'
@@ -51,6 +54,9 @@ interface Contact {
   role: string
   source_url: string
   status: string
+  linkedin_url: string
+  phone: string
+  location: string
 }
 
 interface SuggestedUrl {
@@ -60,7 +66,7 @@ interface SuggestedUrl {
   estimated_contacts: number
 }
 
-type SortKey = 'name' | 'email' | 'company' | 'role' | 'source_url' | 'status'
+type SortKey = 'name' | 'email' | 'company' | 'role' | 'source_url' | 'status' | 'linkedin_url' | 'phone' | 'location'
 type SortDir = 'asc' | 'desc'
 
 interface EditingCell {
@@ -80,11 +86,11 @@ const QUICK_TOPICS = [
 
 // ── Sample Data ────────────────────────────────────────────
 const SAMPLE_CONTACTS: Contact[] = [
-  { id: 1, name: 'Sarah Chen', email: 'sarah.chen@morganstanley.com', company: 'Morgan Stanley', role: 'Senior Equity Analyst', source_url: 'https://morganstanley.com/team', status: 'found' },
-  { id: 2, name: 'James Rodriguez', email: 'j.rodriguez@goldmansachs.com', company: 'Goldman Sachs', role: 'VP Research', source_url: 'https://goldmansachs.com/research', status: 'found' },
-  { id: 3, name: 'Emily Watkins', email: 'e.watkins@jpmorgan.com', company: 'JP Morgan', role: 'Credit Analyst', source_url: 'https://jpmorgan.com/analysts', status: 'found' },
-  { id: 4, name: 'Michael Tanaka', email: '', company: 'Barclays Capital', role: 'Quantitative Analyst', source_url: 'https://barclays.com/team', status: 'partial' },
-  { id: 5, name: 'Lisa Okonkwo', email: 'l.okonkwo@blackrock.com', company: 'BlackRock', role: 'Portfolio Analyst', source_url: 'https://blackrock.com/about', status: 'found' },
+  { id: 1, name: 'Sarah Chen', email: 'sarah.chen@morganstanley.com', company: 'Morgan Stanley', role: 'Senior Equity Analyst', source_url: 'https://morganstanley.com/team', status: 'found', linkedin_url: 'https://linkedin.com/in/sarachen', phone: '+1-212-555-0101', location: 'New York, NY' },
+  { id: 2, name: 'James Rodriguez', email: 'j.rodriguez@goldmansachs.com', company: 'Goldman Sachs', role: 'VP Research', source_url: 'https://goldmansachs.com/research', status: 'found', linkedin_url: 'https://linkedin.com/in/jrodriguez', phone: '+1-212-555-0202', location: 'New York, NY' },
+  { id: 3, name: 'Emily Watkins', email: 'e.watkins@jpmorgan.com', company: 'JP Morgan', role: 'Credit Analyst', source_url: 'https://jpmorgan.com/analysts', status: 'found', linkedin_url: '', phone: '+1-312-555-0303', location: 'Chicago, IL' },
+  { id: 4, name: 'Michael Tanaka', email: '', company: 'Barclays Capital', role: 'Quantitative Analyst', source_url: 'https://barclays.com/team', status: 'partial', linkedin_url: 'https://linkedin.com/in/mtanaka', phone: '', location: 'London, UK' },
+  { id: 5, name: 'Lisa Okonkwo', email: 'l.okonkwo@blackrock.com', company: 'BlackRock', role: 'Portfolio Analyst', source_url: 'https://blackrock.com/about', status: 'found', linkedin_url: 'https://linkedin.com/in/lokonkwo', phone: '+1-415-555-0505', location: 'San Francisco, CA' },
 ]
 
 const SAMPLE_SUGGESTIONS: SuggestedUrl[] = [
@@ -212,6 +218,9 @@ function LoadingSkeletonRows({ count }: { count: number }) {
           <TableCell><Skeleton className="h-4 w-36" /></TableCell>
           <TableCell><Skeleton className="h-4 w-24" /></TableCell>
           <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
           <TableCell><Skeleton className="h-4 w-32" /></TableCell>
           <TableCell><Skeleton className="h-4 w-14" /></TableCell>
           <TableCell><Skeleton className="h-4 w-6" /></TableCell>
@@ -311,6 +320,9 @@ export default function Page() {
     email: true,
     company: true,
     role: true,
+    linkedin_url: true,
+    phone: true,
+    location: true,
   })
 
   const displayContacts = showSampleData && contacts.length === 0 ? SAMPLE_CONTACTS : contacts
@@ -399,7 +411,7 @@ export default function Page() {
     setActiveAgent('research')
 
     const urlList = urls.map((u, i) => `URL ${i + 1}: ${u}`).join('\n')
-    const message = `Research the following websites and extract analyst contact information (name, email, company, role) from each. Use your web search capabilities to access these pages and find contact data:\n\n${urlList}\n\nReturn all contacts found with their source URLs and a status for each contact.`
+    const message = `Search Apollo.io for analyst contact information from the following company websites/domains. For each URL, extract the domain name and use APOLLO_PEOPLE_SEARCH and APOLLO_PEOPLE_ENRICHMENT to find professionals at those organizations. Extract: name, email, company, role, LinkedIn URL, phone, and location.\n\n${urlList}\n\nReturn all contacts found with full enriched details, source URLs, and status for each contact.`
 
     try {
       const result = await callAIAgent(message, WEB_RESEARCH_AGENT_ID)
@@ -414,6 +426,9 @@ export default function Page() {
             role: (c?.role as string) ?? '',
             source_url: (c?.source_url as string) ?? '',
             status: (c?.status as string) ?? 'found',
+            linkedin_url: (c?.linkedin_url as string) ?? '',
+            phone: (c?.phone as string) ?? '',
+            location: (c?.location as string) ?? '',
           }))
           setContacts((prev) => [...prev, ...newContacts])
           setSummary((data?.summary as string) ?? '')
@@ -470,7 +485,9 @@ export default function Page() {
           (c.email ?? '').toLowerCase().includes(q) ||
           (c.company ?? '').toLowerCase().includes(q) ||
           (c.role ?? '').toLowerCase().includes(q) ||
-          (c.source_url ?? '').toLowerCase().includes(q)
+          (c.source_url ?? '').toLowerCase().includes(q) ||
+          (c.location ?? '').toLowerCase().includes(q) ||
+          (c.phone ?? '').toLowerCase().includes(q)
       )
     }
     const sorted = [...filtered].sort((a, b) => {
@@ -484,11 +501,14 @@ export default function Page() {
   }, [displayContacts, searchQuery, sortKey, sortDir])
 
   const visibleColumnCount = useMemo(() => {
-    let count = 3
+    let count = 3 // #, Source URL, Status, Actions
     if (fieldToggles.name) count++
     if (fieldToggles.email) count++
     if (fieldToggles.company) count++
     if (fieldToggles.role) count++
+    if (fieldToggles.linkedin_url) count++
+    if (fieldToggles.phone) count++
+    if (fieldToggles.location) count++
     return count
   }, [fieldToggles])
 
@@ -499,6 +519,9 @@ export default function Page() {
     if (fieldToggles.email) activeFields.push({ key: 'email', label: 'Email' })
     if (fieldToggles.company) activeFields.push({ key: 'company', label: 'Company' })
     if (fieldToggles.role) activeFields.push({ key: 'role', label: 'Role' })
+    if (fieldToggles.linkedin_url) activeFields.push({ key: 'linkedin_url', label: 'LinkedIn' })
+    if (fieldToggles.phone) activeFields.push({ key: 'phone', label: 'Phone' })
+    if (fieldToggles.location) activeFields.push({ key: 'location', label: 'Location' })
     activeFields.push({ key: 'source_url', label: 'Source URL' })
     activeFields.push({ key: 'status', label: 'Status' })
 
@@ -551,7 +574,7 @@ export default function Page() {
                 </h1>
               </div>
               <p className="text-muted-foreground text-sm ml-[3.25rem]" style={{ lineHeight: '1.55' }}>
-                Extract structured contact data from any website using AI-powered web research
+                Extract structured contact data using Apollo.io and AI-powered web research
               </p>
             </div>
             <Button
@@ -813,21 +836,33 @@ export default function Page() {
                 <div className="space-y-4">
                   <div>
                     <Label className="text-sm font-medium mb-3 block">Extract Fields</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {(['name', 'email', 'company', 'role'] as const).map((field) => (
-                        <div key={field} className="flex items-center gap-2">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {([
+                        { key: 'name', label: 'Name' },
+                        { key: 'email', label: 'Email' },
+                        { key: 'company', label: 'Company' },
+                        { key: 'role', label: 'Role' },
+                        { key: 'linkedin_url', label: 'LinkedIn' },
+                        { key: 'phone', label: 'Phone' },
+                        { key: 'location', label: 'Location' },
+                      ] as const).map(({ key, label }) => (
+                        <div key={key} className="flex items-center gap-2">
                           <Checkbox
-                            id={`field-${field}`}
-                            checked={fieldToggles[field]}
+                            id={`field-${key}`}
+                            checked={fieldToggles[key]}
                             onCheckedChange={(checked) =>
-                              setFieldToggles((prev) => ({ ...prev, [field]: checked === true }))
+                              setFieldToggles((prev) => ({ ...prev, [key]: checked === true }))
                             }
                           />
-                          <Label htmlFor={`field-${field}`} className="text-sm capitalize cursor-pointer">
-                            {field}
+                          <Label htmlFor={`field-${key}`} className="text-sm cursor-pointer">
+                            {label}
                           </Label>
                         </div>
                       ))}
+                    </div>
+                    <div className="mt-2 flex items-center gap-1.5 p-2 rounded-lg bg-muted/30 border border-border/60">
+                      <FiZap className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <span className="text-xs text-muted-foreground">Powered by Apollo.io</span>
                     </div>
                   </div>
 
@@ -949,6 +984,21 @@ export default function Page() {
                           <span className="flex items-center gap-1.5">Role <SortIndicator field="role" /></span>
                         </TableHead>
                       )}
+                      {fieldToggles.linkedin_url && (
+                        <TableHead className="group cursor-pointer select-none" onClick={() => handleSort('linkedin_url')}>
+                          <span className="flex items-center gap-1.5">LinkedIn <SortIndicator field="linkedin_url" /></span>
+                        </TableHead>
+                      )}
+                      {fieldToggles.phone && (
+                        <TableHead className="group cursor-pointer select-none" onClick={() => handleSort('phone')}>
+                          <span className="flex items-center gap-1.5">Phone <SortIndicator field="phone" /></span>
+                        </TableHead>
+                      )}
+                      {fieldToggles.location && (
+                        <TableHead className="group cursor-pointer select-none" onClick={() => handleSort('location')}>
+                          <span className="flex items-center gap-1.5">Location <SortIndicator field="location" /></span>
+                        </TableHead>
+                      )}
                       <TableHead className="group cursor-pointer select-none" onClick={() => handleSort('source_url')}>
                         <span className="flex items-center gap-1.5">Source URL <SortIndicator field="source_url" /></span>
                       </TableHead>
@@ -1024,6 +1074,58 @@ export default function Page() {
                               />
                             </TableCell>
                           )}
+                          {fieldToggles.linkedin_url && (
+                            <TableCell>
+                              {contact.linkedin_url ? (
+                                <a
+                                  href={contact.linkedin_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                                  title={contact.linkedin_url}
+                                >
+                                  <SiLinkedin className="h-3.5 w-3.5" />
+                                  <span className="text-xs">Profile</span>
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground italic text-sm">--</span>
+                              )}
+                            </TableCell>
+                          )}
+                          {fieldToggles.phone && (
+                            <TableCell>
+                              {contact.phone ? (
+                                <span className="flex items-center gap-1 text-sm">
+                                  <FiPhone className="h-3 w-3 text-muted-foreground shrink-0" />
+                                  <EditableCell
+                                    value={contact.phone}
+                                    isEditing={editingCell?.rowId === contact.id && editingCell?.field === 'phone'}
+                                    onStartEdit={() => setEditingCell({ rowId: contact.id, field: 'phone' })}
+                                    onFinishEdit={(v) => handleCellEdit(contact.id, 'phone', v)}
+                                  />
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground italic text-sm">--</span>
+                              )}
+                            </TableCell>
+                          )}
+                          {fieldToggles.location && (
+                            <TableCell>
+                              {contact.location ? (
+                                <span className="flex items-center gap-1 text-sm">
+                                  <FiMapPin className="h-3 w-3 text-muted-foreground shrink-0" />
+                                  <EditableCell
+                                    value={contact.location}
+                                    isEditing={editingCell?.rowId === contact.id && editingCell?.field === 'location'}
+                                    onStartEdit={() => setEditingCell({ rowId: contact.id, field: 'location' })}
+                                    onFinishEdit={(v) => handleCellEdit(contact.id, 'location', v)}
+                                  />
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground italic text-sm">--</span>
+                              )}
+                            </TableCell>
+                          )}
                           <TableCell>
                             {contact.source_url ? (
                               <a
@@ -1075,11 +1177,11 @@ export default function Page() {
                 <div className="flex items-center gap-2">
                   <div className={`h-2 w-2 rounded-full ${activeAgent === 'research' ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/30'}`} />
                   <span className="text-xs font-medium text-muted-foreground">Web Research Agent</span>
-                  <span className="text-xs text-muted-foreground/50 font-mono">(Perplexity)</span>
+                  <span className="text-xs text-muted-foreground/50 font-mono">(Apollo.io)</span>
                 </div>
                 <div className="ml-auto">
                   <span className="text-xs text-muted-foreground">
-                    {activeAgent === 'suggest' ? 'Discovering URLs...' : activeAgent === 'research' ? 'Researching contacts...' : 'Idle'}
+                    {activeAgent === 'suggest' ? 'Discovering URLs...' : activeAgent === 'research' ? 'Searching Apollo.io...' : 'Idle'}
                   </span>
                 </div>
               </div>

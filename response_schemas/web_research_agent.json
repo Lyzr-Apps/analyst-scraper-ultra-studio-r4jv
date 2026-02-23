@@ -3,8 +3,9 @@
   "agent_id": "699c35504087cbffb92b3aba",
   "agent_type": "json",
   "accessor": "result",
+  "tools": ["APOLLO_PEOPLE_SEARCH", "APOLLO_PEOPLE_ENRICHMENT", "APOLLO_ORGANIZATION_SEARCH"],
   "response_schema": {
-    "contacts": [{"name": "string", "email": "string", "company": "string", "role": "string", "source_url": "string", "status": "string"}],
+    "contacts": [{"name": "string", "email": "string", "company": "string", "role": "string", "source_url": "string", "status": "string", "linkedin_url": "string", "phone": "string", "location": "string"}],
     "summary": "string",
     "total_found": "number"
   }
