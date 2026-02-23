@@ -1,0 +1,36 @@
+{
+  "agent_name": "Analyst Scraper Agent",
+  "agent_id": "699c31de59d70a5970373cad",
+  "description": "Receives target website URLs from the user, invokes a custom web scraping tool to fetch page content, then parses and extracts structured analyst contact data (name, email, company, role) from the raw content. Returns results as structured records.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "contacts": [
+      {
+        "name": "string",
+        "email": "string",
+        "company": "string",
+        "role": "string",
+        "source_url": "string",
+        "status": "string"
+      }
+    ],
+    "summary": "string",
+    "total_found": "number"
+  },
+  "example_response": {
+    "contacts": [
+      {
+        "name": "sample string",
+        "email": "sample string",
+        "company": "sample string",
+        "role": "sample string",
+        "source_url": "sample string",
+        "status": "sample string"
+      }
+    ],
+    "summary": "sample string",
+    "total_found": 0
+  }
+}

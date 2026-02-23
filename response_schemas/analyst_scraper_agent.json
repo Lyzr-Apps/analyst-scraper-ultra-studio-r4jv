@@ -1,0 +1,68 @@
+{
+  "agent_name": "Analyst Scraper Agent",
+  "agent_id": "699c31de59d70a5970373cad",
+  "description": "Receives target website URLs from the user, invokes a custom web scraping tool to fetch page content, then parses and extracts structured analyst contact data (name, email, company, role) from the raw content. Returns results as structured records.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "AgentResponse",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "contacts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "email": { "type": "string" },
+                "company": { "type": "string" },
+                "role": { "type": "string" },
+                "source_url": { "type": "string" },
+                "status": { "type": "string" }
+              },
+              "required": ["name", "email", "company", "role", "source_url", "status"],
+              "additionalProperties": false
+            }
+          },
+          "summary": { "type": "string" },
+          "total_found": { "type": "number" }
+        },
+        "required": ["contacts", "summary", "total_found"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "response_schema": {
+    "contacts": [
+      {
+        "name": "string",
+        "email": "string",
+        "company": "string",
+        "role": "string",
+        "source_url": "string",
+        "status": "string"
+      }
+    ],
+    "summary": "string",
+    "total_found": "number"
+  },
+  "example_response": {
+    "contacts": [
+      {
+        "name": "Jane Doe",
+        "email": "jane.doe@example.com",
+        "company": "Acme Research",
+        "role": "Senior Analyst",
+        "source_url": "https://example.com/team",
+        "status": "found"
+      }
+    ],
+    "summary": "Extracted 1 analyst contact from 1 URL.",
+    "total_found": 1
+  }
+}
