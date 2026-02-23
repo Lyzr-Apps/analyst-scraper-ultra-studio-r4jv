@@ -1,0 +1,32 @@
+{
+  "agent_name": "URL Suggestion Agent",
+  "agent_id": "699c3550dd37e749f18292dd",
+  "description": "Suggests target website URLs where analyst contact information can be found. Uses real-time web search to find relevant pages with analyst directories, team pages, and contact listings based on the user's specified industry, company, or topic.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "suggested_urls": [
+      {
+        "url": "string",
+        "site_name": "string",
+        "description": "string",
+        "estimated_contacts": "number"
+      }
+    ],
+    "search_summary": "string",
+    "total_suggestions": "number"
+  },
+  "example_response": {
+    "suggested_urls": [
+      {
+        "url": "sample string",
+        "site_name": "sample string",
+        "description": "sample string",
+        "estimated_contacts": 0
+      }
+    ],
+    "search_summary": "sample string",
+    "total_suggestions": 0
+  }
+}

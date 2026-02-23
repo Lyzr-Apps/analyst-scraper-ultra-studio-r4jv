@@ -1,0 +1,11 @@
+{
+  "agent_name": "URL Suggestion Agent",
+  "agent_id": "699c3550dd37e749f18292dd",
+  "agent_type": "json",
+  "accessor": "result",
+  "response_schema": {
+    "suggested_urls": [{"url": "string", "site_name": "string", "description": "string", "estimated_contacts": "number"}],
+    "search_summary": "string",
+    "total_suggestions": "number"
+  }
+}

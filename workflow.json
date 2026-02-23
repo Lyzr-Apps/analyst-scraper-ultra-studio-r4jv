@@ -1,53 +1,68 @@
 {
   "workflow": {
     "nodes": [
-      {
-        "id": "input_node",
-        "type": "Input",
-        "label": "User Input (URLs)",
-        "nodeCategory": "input"
-      },
-      {
-        "id": "analyst_scraper_agent",
-        "type": "Agent",
-        "label": "Analyst Scraper Agent",
-        "nodeCategory": "agent"
-      },
-      {
-        "id": "output_node",
-        "type": "Output",
-        "label": "Structured Contacts Output",
-        "nodeCategory": "end"
-      }
+      {"id": "input_node", "type": "Input", "label": "User Input (URLs/Topics)", "nodeCategory": "input"},
+      {"id": "url_suggester_agent", "type": "Agent", "label": "URL Suggestion Agent", "nodeCategory": "agent"},
+      {"id": "web_research_agent", "type": "Agent", "label": "Web Research Agent", "nodeCategory": "agent"},
+      {"id": "output_node", "type": "Output", "label": "Structured Contacts Output", "nodeCategory": "end"}
     ],
     "edges": [
-      {
-        "source": "input_node",
-        "target": "analyst_scraper_agent"
-      },
-      {
-        "source": "analyst_scraper_agent",
-        "target": "output_node"
-      }
+      {"source": "input_node", "target": "url_suggester_agent"},
+      {"source": "input_node", "target": "web_research_agent"},
+      {"source": "url_suggester_agent", "target": "output_node"},
+      {"source": "web_research_agent", "target": "output_node"}
     ]
   },
   "agents": [
     {
-      "node_id": "analyst_scraper_agent",
-      "agent_id": "699c31de59d70a5970373cad",
-      "name": "Analyst Scraper Agent",
-      "description": "Receives target website URLs from the user, invokes a custom web scraping tool to fetch page content, then parses and extracts structured analyst contact data (name, email, company, role) from the raw content. Returns results as structured records.",
-      "agent_role": "You are an expert web content analyst specializing in extracting structured contact information from web pages.",
-      "agent_goal": "Extract analyst contact information (name, email, company, role) from the provided web page content and return structured records.",
-      "provider": "openai",
-      "model": "gpt-4.1",
-      "temperature": 0.2,
+      "node_id": "url_suggester_agent",
+      "agent_id": "699c3550dd37e749f18292dd",
+      "name": "URL Suggestion Agent",
+      "description": "Suggests target website URLs where analyst contact information can be found. Uses real-time web search to find relevant pages with analyst directories, team pages, and contact listings based on the user's specified industry, company, or topic.",
+      "provider": "perplexity",
+      "model": "sonar-pro",
+      "temperature": 0.3,
       "top_p": 1,
+      "has_voice": false,
+      "has_image": false,
+      "has_file_output": false,
+      "has_knowledge_base": false,
+      "has_schedule": false,
       "tool_configs": [],
       "managed_agents": [],
       "image_output_config": null,
       "voice_config": null,
-      "file_output": false
+      "file_output": false,
+      "response_schema": {
+        "suggested_urls": [{"url": "string", "site_name": "string", "description": "string", "estimated_contacts": "number"}],
+        "search_summary": "string",
+        "total_suggestions": "number"
+      }
+    },
+    {
+      "node_id": "web_research_agent",
+      "agent_id": "699c35504087cbffb92b3aba",
+      "name": "Web Research Agent",
+      "description": "Researches websites and extracts analyst contact information using real-time web search. Accesses the actual web pages and extracts structured contact data including names, emails, companies, and roles.",
+      "provider": "perplexity",
+      "model": "sonar-pro",
+      "temperature": 0.2,
+      "top_p": 1,
+      "has_voice": false,
+      "has_image": false,
+      "has_file_output": false,
+      "has_knowledge_base": false,
+      "has_schedule": false,
+      "tool_configs": [],
+      "managed_agents": [],
+      "image_output_config": null,
+      "voice_config": null,
+      "file_output": false,
+      "response_schema": {
+        "contacts": [{"name": "string", "email": "string", "company": "string", "role": "string", "source_url": "string", "status": "string"}],
+        "summary": "string",
+        "total_found": "number"
+      }
     }
   ]
 }

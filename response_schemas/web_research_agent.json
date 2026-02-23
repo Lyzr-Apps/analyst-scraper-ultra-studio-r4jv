@@ -1,0 +1,11 @@
+{
+  "agent_name": "Web Research Agent",
+  "agent_id": "699c35504087cbffb92b3aba",
+  "agent_type": "json",
+  "accessor": "result",
+  "response_schema": {
+    "contacts": [{"name": "string", "email": "string", "company": "string", "role": "string", "source_url": "string", "status": "string"}],
+    "summary": "string",
+    "total_found": "number"
+  }
+}

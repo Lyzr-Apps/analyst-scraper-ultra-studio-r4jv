@@ -1,0 +1,36 @@
+{
+  "agent_name": "Web Research Agent",
+  "agent_id": "699c35504087cbffb92b3aba",
+  "description": "Researches websites and extracts analyst contact information using real-time web search. Accesses the actual web pages and extracts structured contact data including names, emails, companies, and roles.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "contacts": [
+      {
+        "name": "string",
+        "email": "string",
+        "company": "string",
+        "role": "string",
+        "source_url": "string",
+        "status": "string"
+      }
+    ],
+    "summary": "string",
+    "total_found": "number"
+  },
+  "example_response": {
+    "contacts": [
+      {
+        "name": "sample string",
+        "email": "sample string",
+        "company": "sample string",
+        "role": "sample string",
+        "source_url": "sample string",
+        "status": "sample string"
+      }
+    ],
+    "summary": "sample string",
+    "total_found": 0
+  }
+}
