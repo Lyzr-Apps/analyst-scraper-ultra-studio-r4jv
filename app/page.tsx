@@ -130,6 +130,62 @@ function formatInline(text: string) {
   )
 }
 
+// ── Deep response extraction ──────────────────────────────
+// The Lyzr API normalizes responses through multiple layers.
+// The data can appear at different nesting depths depending on
+// agent type, tools used, and response format.
+function deepFindArray(obj: any, key: string, maxDepth = 5, depth = 0): any[] | null {
+  if (depth > maxDepth || !obj || typeof obj !== 'object') return null
+  if (Array.isArray(obj[key])) return obj[key]
+  for (const k of Object.keys(obj)) {
+    if (obj[k] && typeof obj[k] === 'object' && !Array.isArray(obj[k])) {
+      const found = deepFindArray(obj[k], key, maxDepth, depth + 1)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+function deepFindString(obj: any, key: string, maxDepth = 5, depth = 0): string | null {
+  if (depth > maxDepth || !obj || typeof obj !== 'object') return null
+  if (typeof obj[key] === 'string' && obj[key]) return obj[key]
+  for (const k of Object.keys(obj)) {
+    if (obj[k] && typeof obj[k] === 'object' && !Array.isArray(obj[k])) {
+      const found = deepFindString(obj[k], key, maxDepth, depth + 1)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+function deepFindNumber(obj: any, key: string, maxDepth = 5, depth = 0): number | null {
+  if (depth > maxDepth || !obj || typeof obj !== 'object') return null
+  if (typeof obj[key] === 'number') return obj[key]
+  for (const k of Object.keys(obj)) {
+    if (obj[k] && typeof obj[k] === 'object' && !Array.isArray(obj[k])) {
+      const found = deepFindNumber(obj[k], key, maxDepth, depth + 1)
+      if (found !== null) return found
+    }
+  }
+  return null
+}
+
+function extractTextFromResult(result: any): string {
+  if (!result) return ''
+  if (typeof result === 'string') return result
+  if (typeof result?.response?.message === 'string') return result.response.message
+  if (typeof result?.response?.result?.text === 'string') return result.response.result.text
+  if (typeof result?.response?.result === 'string') return result.response.result
+  if (typeof result?.error === 'string') return result.error
+  // Try to find any text-like field
+  const textKeys = ['text', 'message', 'summary', 'content', 'answer', 'response']
+  for (const key of textKeys) {
+    const val = deepFindString(result, key)
+    if (val) return val
+  }
+  return ''
+}
+
 function StatusBadge({ status }: { status: string }) {
   const s = (status ?? '').toLowerCase()
   if (s === 'found') {
@@ -373,27 +429,29 @@ export default function Page() {
       )
 
       if (result.success) {
-        const data = result?.response?.result
-        if (data && Array.isArray(data?.suggested_urls)) {
-          setSuggestions(data.suggested_urls.map((s: Record<string, unknown>) => ({
+        // Deep-find suggested_urls array anywhere in the response
+        const suggestedUrls = deepFindArray(result, 'suggested_urls')
+        if (suggestedUrls && suggestedUrls.length > 0) {
+          setSuggestions(suggestedUrls.map((s: Record<string, unknown>) => ({
             url: (s?.url as string) ?? '',
             site_name: (s?.site_name as string) ?? '',
             description: (s?.description as string) ?? '',
             estimated_contacts: (s?.estimated_contacts as number) ?? 0,
           })))
-          setSuggestSummary((data?.search_summary as string) ?? '')
+          setSuggestSummary(deepFindString(result, 'search_summary') ?? '')
         } else {
           // Fallback: try text response
-          const textResult = data?.text ?? result?.response?.message ?? ''
+          const textResult = extractTextFromResult(result)
           if (textResult) {
-            setSuggestSummary(String(textResult))
+            setSuggestSummary(textResult)
             setSuggestions([])
           } else {
             setSuggestError('No URL suggestions returned. Try a different search term.')
           }
         }
       } else {
-        setSuggestError(result?.error ?? 'Failed to get URL suggestions.')
+        const errorText = result?.error ?? extractTextFromResult(result) ?? 'Failed to get URL suggestions.'
+        setSuggestError(errorText)
       }
     } catch (err) {
       setSuggestError(err instanceof Error ? err.message : 'Network error.')
@@ -416,9 +474,10 @@ export default function Page() {
     try {
       const result = await callAIAgent(message, WEB_RESEARCH_AGENT_ID)
       if (result.success) {
-        const data = result?.response?.result
-        if (data && Array.isArray(data?.contacts)) {
-          const newContacts: Contact[] = data.contacts.map((c: Record<string, unknown>, i: number) => ({
+        // Deep-find contacts array anywhere in the response
+        const contactsArr = deepFindArray(result, 'contacts')
+        if (contactsArr && contactsArr.length > 0) {
+          const newContacts: Contact[] = contactsArr.map((c: Record<string, unknown>, i: number) => ({
             id: Date.now() + i,
             name: (c?.name as string) ?? '',
             email: (c?.email as string) ?? '',
@@ -431,18 +490,20 @@ export default function Page() {
             location: (c?.location as string) ?? '',
           }))
           setContacts((prev) => [...prev, ...newContacts])
-          setSummary((data?.summary as string) ?? '')
-          setTotalFound((data?.total_found as number) ?? newContacts.length)
+          setSummary(deepFindString(result, 'summary') ?? '')
+          setTotalFound(deepFindNumber(result, 'total_found') ?? newContacts.length)
         } else {
-          const textResult = data?.text ?? result?.response?.message ?? ''
+          // Fallback: try to extract any text from response
+          const textResult = extractTextFromResult(result)
           if (textResult) {
-            setSummary(String(textResult))
+            setSummary(textResult)
           } else {
-            setErrorMsg('No contacts found. The agent may not have been able to access these URLs.')
+            setErrorMsg('No contacts found. The agent may not have been able to access these URLs. Try different URLs or search terms.')
           }
         }
       } else {
-        setErrorMsg(result?.error ?? 'An error occurred. Please try again.')
+        const errorText = result?.error ?? extractTextFromResult(result) ?? 'An error occurred. Please try again.'
+        setErrorMsg(errorText)
       }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Network error.')
